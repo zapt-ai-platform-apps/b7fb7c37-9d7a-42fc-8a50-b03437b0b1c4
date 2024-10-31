@@ -1,4 +1,5 @@
 import { createSignal, For, Show, onCleanup } from 'solid-js';
+import * as Sentry from "@sentry/browser";
 
 function App() {
   const [stations, setStations] = createSignal([]);
@@ -55,6 +56,7 @@ function App() {
       }
     } catch (error) {
       console.error('Error fetching stations:', error);
+      Sentry.captureException(error);
     } finally {
       setLoading(false);
     }
@@ -84,14 +86,19 @@ function App() {
       stopStation(currentPlayingStation());
     }
 
-    let audio = audioPlayers.get(station.stationuuid);
-    if (!audio) {
-      audio = new Audio(station.url_resolved);
-      audio.loop = true;
-      audioPlayers.set(station.stationuuid, audio);
+    try {
+      let audio = audioPlayers.get(station.stationuuid);
+      if (!audio) {
+        audio = new Audio(station.url_resolved);
+        audio.loop = true;
+        audioPlayers.set(station.stationuuid, audio);
+      }
+      audio.play();
+      setCurrentPlayingStation(station);
+    } catch (error) {
+      console.error('Error playing station:', error);
+      Sentry.captureException(error);
     }
-    audio.play();
-    setCurrentPlayingStation(station);
   }
 
   function stopStation(station) {
@@ -106,7 +113,7 @@ function App() {
   }
 
   function previousStation() {
-    if (selectedStationIndex() > 0) {
+    if (selectedStationIndex() != null && selectedStationIndex() > 0) {
       const index = selectedStationIndex() - 1;
       const station = filteredStations()[index];
       setSelectedStation(station);
@@ -116,7 +123,7 @@ function App() {
   }
 
   function nextStation() {
-    if (selectedStationIndex() < filteredStations().length - 1) {
+    if (selectedStationIndex() != null && selectedStationIndex() < filteredStations().length - 1) {
       const index = selectedStationIndex() + 1;
       const station = filteredStations()[index];
       setSelectedStation(station);
@@ -140,6 +147,7 @@ function App() {
         <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
         <div class="flex justify-center">
           <select
+            value={currentCountry() ? currentCountry().code : ""}
             class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
             onChange={(e) => {
               const selectedCode = e.target.value;
@@ -150,7 +158,7 @@ function App() {
             }}
             disabled={loading()}
           >
-            <option value="" selected disabled>اختر دولة</option>
+            <option value="" disabled>اختر دولة</option>
             <For each={arabCountries}>
               {(country) => (
                 <option value={country.code}>{country.name}</option>
@@ -189,6 +197,7 @@ function App() {
               }
             >
               <select
+                value={selectedStation() ? selectedStation().stationuuid : ""}
                 class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
                 size="10"
                 onChange={(e) => {
@@ -201,7 +210,7 @@ function App() {
                 }}
                 disabled={loading()}
               >
-                <option value="" selected disabled>اختر محطة</option>
+                <option value="" disabled>اختر محطة</option>
                 <For each={filteredStations()}>
                   {(station) => (
                     <option value={station.stationuuid}>{station.name}</option>
@@ -231,14 +240,14 @@ function App() {
                   <button
                     class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     onClick={nextStation}
-                    disabled={selectedStationIndex() === filteredStations().length - 1}
+                    disabled={selectedStationIndex() == null || selectedStationIndex() === filteredStations().length - 1}
                   >
                     المحطة التالية
                   </button>
                   <button
                     class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     onClick={previousStation}
-                    disabled={selectedStationIndex() === 0}
+                    disabled={selectedStationIndex() == null || selectedStationIndex() === 0}
                   >
                     المحطة السابقة
                   </button>
