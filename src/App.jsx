@@ -60,6 +60,7 @@ function App() {
     setCurrentCountry(country);
     setCurrentStation(null);
     setSearchQuery('');
+    setStations([]);
     fetchStations(country.code);
   };
 
@@ -70,7 +71,7 @@ function App() {
         <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">اختر دولة</h2>
         <div class="flex justify-center">
           <select
-            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
+            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer text-blue-800"
             onChange={(e) => {
               const selectedCode = e.target.value;
               const selectedCountry = arabCountries.find(country => country.code === selectedCode);
@@ -106,7 +107,7 @@ function App() {
               placeholder="بحث"
               value={searchQuery()}
               onInput={(e) => setSearchQuery(e.target.value)}
-              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border"
+              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border text-blue-800"
             />
             <Show
               when={!loading()}
@@ -117,13 +118,13 @@ function App() {
               <div class="max-h-[60vh] overflow-y-auto">
                 <For each={filteredStations()}>
                   {(station) => (
-                    <div
-                      class="p-4 mb-2 bg-white rounded-lg shadow-md hover:bg-blue-100 cursor-pointer"
+                    <button
+                      class="w-full p-4 mb-2 bg-white rounded-lg shadow-md hover:bg-blue-100 cursor-pointer text-left text-blue-800"
                       onClick={() => setCurrentStation(station)}
                     >
-                      <p class="text-blue-800 font-semibold">{station.name}</p>
+                      <p class="font-semibold">{station.name}</p>
                       <p class="text-gray-600 text-sm">{station.country}</p>
-                    </div>
+                    </button>
                   )}
                 </For>
               </div>
