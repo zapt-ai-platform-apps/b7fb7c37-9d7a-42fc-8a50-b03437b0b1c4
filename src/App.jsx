@@ -173,7 +173,7 @@ function App() {
           العودة إلى قائمة الدول
         </button>
         <h2 class="text-2xl font-bold mb-4 text-center">محطات الراديو في {currentCountry().name}</h2>
-        <div class="flex flex-col md:flex-row md:space-x-4">
+        <div class="flex flex-col md:flex-row md:space-x-reverse md:space-x-4">
           <div class="md:w-1/3">
             <input
               type="text"
@@ -190,6 +190,7 @@ function App() {
             >
               <select
                 class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
+                size="10"
                 onChange={(e) => {
                   const selectedStationuuid = e.target.value;
                   const index = filteredStations().findIndex(s => s.stationuuid === selectedStationuuid);
@@ -210,7 +211,7 @@ function App() {
             </Show>
             <Show when={selectedStation()}>
               <div class="flex flex-col space-y-2">
-                <div class="flex space-x-2">
+                <div class="flex space-x-reverse space-x-2">
                   <button
                     class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     onClick={() => playStation(selectedStation())}
@@ -226,20 +227,20 @@ function App() {
                     إيقاف
                   </button>
                 </div>
-                <div class="flex space-x-2">
-                  <button
-                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                    onClick={previousStation}
-                    disabled={selectedStationIndex() === 0}
-                  >
-                    المحطة السابقة
-                  </button>
+                <div class="flex space-x-reverse space-x-2">
                   <button
                     class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     onClick={nextStation}
                     disabled={selectedStationIndex() === filteredStations().length - 1}
                   >
                     المحطة التالية
+                  </button>
+                  <button
+                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    onClick={previousStation}
+                    disabled={selectedStationIndex() === 0}
+                  >
+                    المحطة السابقة
                   </button>
                 </div>
               </div>
