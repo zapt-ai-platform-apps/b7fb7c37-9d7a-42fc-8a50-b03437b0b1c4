@@ -134,7 +134,7 @@ function App() {
   });
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
+    <div class="h-full bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
       <h1 class="text-4xl font-bold mb-4 text-center">الراديو العربي</h1>
       <Show when={!currentCountry()}>
         <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
@@ -231,25 +231,28 @@ function App() {
                 </div>
                 <div class="flex space-x-reverse space-x-2">
                   <button
-                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                    onClick={nextStation}
-                    disabled={selectedStationIndex() === filteredStations().length - 1}
-                  >
-                    المحطة التالية
-                  </button>
-                  <button
-                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    class={`flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${selectedStationIndex() === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={previousStation}
                     disabled={selectedStationIndex() === 0}
                   >
                     المحطة السابقة
+                  </button>
+                  <button
+                    class={`flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${selectedStationIndex() === filteredStations().length -1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={nextStation}
+                    disabled={selectedStationIndex() === filteredStations().length -1}
+                  >
+                    المحطة التالية
                   </button>
                 </div>
               </div>
             </Show>
           </div>
           <div class="md:w-2/3 mt-4 md:mt-0 flex flex-col items-center justify-center h-full">
-            <Show when={currentPlayingStation()}>
+            <Show when={loading()}>
+              <p class="text-center">جاري التحميل...</p>
+            </Show>
+            <Show when={!loading() && currentPlayingStation()}>
               <div class="w-full text-center">
                 <h2 class="text-2xl font-bold mb-4">{currentPlayingStation().name}</h2>
                 <div class="flex flex-col items-center space-y-4">
@@ -270,7 +273,7 @@ function App() {
                 </div>
               </div>
             </Show>
-            <Show when={!currentPlayingStation() && !loading()}>
+            <Show when={!loading() && !currentPlayingStation()}>
               <p class="text-center">اختر محطة من القائمة لتشغيلها</p>
             </Show>
           </div>
