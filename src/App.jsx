@@ -4,6 +4,7 @@ function App() {
   const [stations, setStations] = createSignal([]);
   const [searchQuery, setSearchQuery] = createSignal('');
   const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal('');
   const [currentCountry, setCurrentCountry] = createSignal(null);
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
 
@@ -36,6 +37,7 @@ function App() {
 
   const fetchStations = async (countryCode) => {
     setLoading(true);
+    setError('');
     try {
       const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
       if (response.ok) {
@@ -49,9 +51,11 @@ function App() {
         setStations(uniqueStations);
       } else {
         console.error('Error fetching stations:', response.statusText);
+        setError('خطأ في جلب المحطات. الرجاء المحاولة مرة أخرى.');
       }
     } catch (error) {
       console.error('Error fetching stations:', error);
+      setError('حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -84,8 +88,13 @@ function App() {
       audio.loop = true;
       audioPlayers.set(station.stationuuid, audio);
     }
-    audio.play();
-    setCurrentPlayingStation(station);
+    try {
+      audio.play();
+      setCurrentPlayingStation(station);
+    } catch (error) {
+      console.error('Error playing station:', error);
+      alert('حدث خطأ أثناء تشغيل المحطة. الرجاء المحاولة مرة أخرى.');
+    }
   }
 
   function stopStation(station) {
@@ -139,6 +148,7 @@ function App() {
             setCurrentCountry(null);
             setStations([]);
             setCurrentPlayingStation(null);
+            setError('');
           }}
         >
           العودة إلى قائمة الدول
@@ -153,6 +163,9 @@ function App() {
               onInput={(e) => setSearchQuery(e.target.value)}
               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border text-blue-800"
             />
+            <Show when={error()}>
+              <p class="text-center text-red-500">{error()}</p>
+            </Show>
             <Show
               when={!loading()}
               fallback={
@@ -197,10 +210,9 @@ function App() {
             <Show when={currentPlayingStation()}>
               <div class="w-full">
                 <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">{currentPlayingStation().name}</h2>
-                {/* لا حاجة لعنصر الصوت هنا لأننا نستخدم Audio API */}
               </div>
             </Show>
-            <Show when={!currentPlayingStation()}>
+            <Show when={!currentPlayingStation() && !loading()}>
               <p class="text-center text-blue-800">اختر محطة من القائمة لتشغيلها</p>
             </Show>
           </div>
