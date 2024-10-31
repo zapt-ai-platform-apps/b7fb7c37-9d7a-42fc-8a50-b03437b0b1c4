@@ -38,7 +38,13 @@ function App() {
       const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
       if (response.ok) {
         const data = await response.json();
-        setStations(data);
+        // إزالة المحطات المكررة التي تحمل نفس الاسم أو الرابط
+        const uniqueStations = data.filter((station, index, self) =>
+          index === self.findIndex((s) => (
+            s.name === station.name && s.url_resolved === station.url_resolved
+          ))
+        );
+        setStations(uniqueStations);
       } else {
         console.error('Error fetching stations:', response.statusText);
       }
