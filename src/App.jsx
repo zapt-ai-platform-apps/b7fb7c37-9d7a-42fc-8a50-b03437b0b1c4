@@ -7,6 +7,7 @@ function App() {
   const [currentCountry, setCurrentCountry] = createSignal(null);
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
   const [selectedStation, setSelectedStation] = createSignal(null);
+  const [selectedStationIndex, setSelectedStationIndex] = createSignal(null);
 
   const audioPlayers = new Map();
 
@@ -70,6 +71,7 @@ function App() {
     setCurrentCountry(country);
     setCurrentPlayingStation(null);
     setSelectedStation(null);
+    setSelectedStationIndex(null);
     setSearchQuery('');
     setStations([]);
     fetchStations(country.code);
@@ -100,6 +102,26 @@ function App() {
     }
     if (currentPlayingStation() && currentPlayingStation().stationuuid === station.stationuuid) {
       setCurrentPlayingStation(null);
+    }
+  }
+
+  function previousStation() {
+    if (selectedStationIndex() > 0) {
+      const index = selectedStationIndex() - 1;
+      const station = filteredStations()[index];
+      setSelectedStation(station);
+      setSelectedStationIndex(index);
+      playStation(station);
+    }
+  }
+
+  function nextStation() {
+    if (selectedStationIndex() < filteredStations().length - 1) {
+      const index = selectedStationIndex() + 1;
+      const station = filteredStations()[index];
+      setSelectedStation(station);
+      setSelectedStationIndex(index);
+      playStation(station);
     }
   }
 
@@ -145,6 +167,7 @@ function App() {
             setStations([]);
             setCurrentPlayingStation(null);
             setSelectedStation(null);
+            setSelectedStationIndex(null);
           }}
         >
           العودة إلى قائمة الدول
@@ -169,8 +192,11 @@ function App() {
                 class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
                 onChange={(e) => {
                   const selectedStationuuid = e.target.value;
-                  const station = stations().find(s => s.stationuuid === selectedStationuuid);
-                  setSelectedStation(station);
+                  const index = filteredStations().findIndex(s => s.stationuuid === selectedStationuuid);
+                  if (index !== -1) {
+                    setSelectedStation(filteredStations()[index]);
+                    setSelectedStationIndex(index);
+                  }
                 }}
                 disabled={loading()}
               >
@@ -183,25 +209,39 @@ function App() {
               </select>
             </Show>
             <Show when={selectedStation()}>
-              <div class="flex space-x-4">
-                <Show
-                  when={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}
-                  fallback={
-                    <button
-                      class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                      onClick={() => playStation(selectedStation())}
-                    >
-                      تشغيل
-                    </button>
-                  }
-                >
+              <div class="flex flex-col space-y-2">
+                <div class="flex space-x-2">
                   <button
-                    class="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    onClick={() => playStation(selectedStation())}
+                    disabled={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}
+                  >
+                    تشغيل
+                  </button>
+                  <button
+                    class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     onClick={() => stopStation(selectedStation())}
+                    disabled={!currentPlayingStation() || currentPlayingStation().stationuuid !== selectedStation().stationuuid}
                   >
                     إيقاف
                   </button>
-                </Show>
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    onClick={previousStation}
+                    disabled={selectedStationIndex() === 0}
+                  >
+                    المحطة السابقة
+                  </button>
+                  <button
+                    class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    onClick={nextStation}
+                    disabled={selectedStationIndex() === filteredStations().length - 1}
+                  >
+                    المحطة التالية
+                  </button>
+                </div>
               </div>
             </Show>
           </div>
