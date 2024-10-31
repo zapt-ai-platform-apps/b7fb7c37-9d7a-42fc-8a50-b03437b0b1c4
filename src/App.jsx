@@ -6,6 +6,7 @@ function App() {
   const [loading, setLoading] = createSignal(false);
   const [currentCountry, setCurrentCountry] = createSignal(null);
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
+  const [selectedStation, setSelectedStation] = createSignal(null);
 
   const audioPlayers = new Map();
 
@@ -68,6 +69,7 @@ function App() {
   const selectCountry = (country) => {
     setCurrentCountry(country);
     setCurrentPlayingStation(null);
+    setSelectedStation(null);
     setSearchQuery('');
     setStations([]);
     fetchStations(country.code);
@@ -110,7 +112,7 @@ function App() {
   });
 
   return (
-    <div class="h-full bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
+    <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
       <h1 class="text-4xl font-bold mb-4 text-center">راديو عربي احترافي</h1>
       <Show when={!currentCountry()}>
         <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
@@ -142,6 +144,7 @@ function App() {
             setCurrentCountry(null);
             setStations([]);
             setCurrentPlayingStation(null);
+            setSelectedStation(null);
           }}
         >
           العودة إلى قائمة الدول
@@ -162,37 +165,43 @@ function App() {
                 <p class="text-center">جاري التحميل...</p>
               }
             >
-              <div class="max-h-[60vh] overflow-y-auto">
+              <select
+                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
+                onChange={(e) => {
+                  const selectedStationuuid = e.target.value;
+                  const station = stations().find(s => s.stationuuid === selectedStationuuid);
+                  setSelectedStation(station);
+                }}
+                disabled={loading()}
+              >
+                <option value="" selected disabled>اختر محطة</option>
                 <For each={filteredStations()}>
                   {(station) => (
-                    <div class="w-full p-4 mb-2 bg-white rounded-lg shadow-md flex items-center justify-between">
-                      <div class="text-left">
-                        <p class="font-semibold">{station.name}</p>
-                        <p class="text-gray-600 text-sm">{station.country}</p>
-                      </div>
-                      <div class="flex items-center space-x-2">
-                        <Show
-                          when={currentPlayingStation() && currentPlayingStation().stationuuid === station.stationuuid}
-                          fallback={
-                            <button
-                              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                              onClick={() => playStation(station)}
-                            >
-                              تشغيل
-                            </button>
-                          }
-                        >
-                          <button
-                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                            onClick={() => stopStation(station)}
-                          >
-                            إيقاف
-                          </button>
-                        </Show>
-                      </div>
-                    </div>
+                    <option value={station.stationuuid}>{station.name}</option>
                   )}
                 </For>
+              </select>
+            </Show>
+            <Show when={selectedStation()}>
+              <div class="flex space-x-4">
+                <Show
+                  when={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}
+                  fallback={
+                    <button
+                      class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                      onClick={() => playStation(selectedStation())}
+                    >
+                      تشغيل
+                    </button>
+                  }
+                >
+                  <button
+                    class="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    onClick={() => stopStation(selectedStation())}
+                  >
+                    إيقاف
+                  </button>
+                </Show>
               </div>
             </Show>
           </div>
