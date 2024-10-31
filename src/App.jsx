@@ -4,7 +4,6 @@ function App() {
   const [stations, setStations] = createSignal([]);
   const [searchQuery, setSearchQuery] = createSignal('');
   const [loading, setLoading] = createSignal(false);
-  const [error, setError] = createSignal('');
   const [currentCountry, setCurrentCountry] = createSignal(null);
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
 
@@ -36,8 +35,8 @@ function App() {
   ];
 
   const fetchStations = async (countryCode) => {
+    if (loading()) return;
     setLoading(true);
-    setError('');
     try {
       const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
       if (response.ok) {
@@ -51,11 +50,9 @@ function App() {
         setStations(uniqueStations);
       } else {
         console.error('Error fetching stations:', response.statusText);
-        setError('خطأ في جلب المحطات. الرجاء المحاولة مرة أخرى.');
       }
     } catch (error) {
       console.error('Error fetching stations:', error);
-      setError('حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -77,6 +74,7 @@ function App() {
   };
 
   function playStation(station) {
+    if (loading()) return;
     // Stop any currently playing audio
     if (currentPlayingStation() && currentPlayingStation().stationuuid !== station.stationuuid) {
       stopStation(currentPlayingStation());
@@ -88,13 +86,8 @@ function App() {
       audio.loop = true;
       audioPlayers.set(station.stationuuid, audio);
     }
-    try {
-      audio.play();
-      setCurrentPlayingStation(station);
-    } catch (error) {
-      console.error('Error playing station:', error);
-      alert('حدث خطأ أثناء تشغيل المحطة. الرجاء المحاولة مرة أخرى.');
-    }
+    audio.play();
+    setCurrentPlayingStation(station);
   }
 
   function stopStation(station) {
@@ -117,13 +110,13 @@ function App() {
   });
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col">
-      <h1 class="text-4xl font-bold text-blue-800 mb-4 text-center">راديو عربي احترافي</h1>
+    <div class="h-full bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
+      <h1 class="text-4xl font-bold mb-4 text-center">راديو عربي احترافي</h1>
       <Show when={!currentCountry()}>
-        <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">اختر دولة</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
         <div class="flex justify-center">
           <select
-            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer text-blue-800"
+            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
             onChange={(e) => {
               const selectedCode = e.target.value;
               const selectedCountry = arabCountries.find(country => country.code === selectedCode);
@@ -131,6 +124,7 @@ function App() {
                 selectCountry(selectedCountry);
               }
             }}
+            disabled={loading()}
           >
             <option value="" selected disabled>اختر دولة</option>
             <For each={arabCountries}>
@@ -148,12 +142,11 @@ function App() {
             setCurrentCountry(null);
             setStations([]);
             setCurrentPlayingStation(null);
-            setError('');
           }}
         >
           العودة إلى قائمة الدول
         </button>
-        <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">محطات الراديو في {currentCountry().name}</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">محطات الراديو في {currentCountry().name}</h2>
         <div class="flex flex-col md:flex-row md:space-x-4">
           <div class="md:w-1/3">
             <input
@@ -161,22 +154,19 @@ function App() {
               placeholder="بحث"
               value={searchQuery()}
               onInput={(e) => setSearchQuery(e.target.value)}
-              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border text-blue-800"
+              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border"
             />
-            <Show when={error()}>
-              <p class="text-center text-red-500">{error()}</p>
-            </Show>
             <Show
               when={!loading()}
               fallback={
-                <p class="text-center text-blue-800">جاري التحميل...</p>
+                <p class="text-center">جاري التحميل...</p>
               }
             >
               <div class="max-h-[60vh] overflow-y-auto">
                 <For each={filteredStations()}>
                   {(station) => (
                     <div class="w-full p-4 mb-2 bg-white rounded-lg shadow-md flex items-center justify-between">
-                      <div class="text-left text-blue-800">
+                      <div class="text-left">
                         <p class="font-semibold">{station.name}</p>
                         <p class="text-gray-600 text-sm">{station.country}</p>
                       </div>
@@ -206,14 +196,15 @@ function App() {
               </div>
             </Show>
           </div>
-          <div class="md:w-2/3 mt-4 md:mt-0 flex flex-col items-center">
+          <div class="md:w-2/3 mt-4 md:mt-0 flex flex-col items-center justify-center">
             <Show when={currentPlayingStation()}>
               <div class="w-full">
-                <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">{currentPlayingStation().name}</h2>
+                <h2 class="text-2xl font-bold mb-4 text-center">{currentPlayingStation().name}</h2>
+                {/* يمكن إضافة معلومات إضافية عن المحطة هنا */}
               </div>
             </Show>
             <Show when={!currentPlayingStation() && !loading()}>
-              <p class="text-center text-blue-800">اختر محطة من القائمة لتشغيلها</p>
+              <p class="text-center">اختر محطة من القائمة لتشغيلها</p>
             </Show>
           </div>
         </div>
