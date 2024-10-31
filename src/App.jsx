@@ -212,20 +212,22 @@ function App() {
             <Show when={selectedStation()}>
               <div class="flex flex-col space-y-2">
                 <div class="flex space-x-reverse space-x-2">
-                  <button
-                    class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                    onClick={() => playStation(selectedStation())}
-                    disabled={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}
-                  >
-                    تشغيل
-                  </button>
-                  <button
-                    class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                    onClick={() => stopStation(selectedStation())}
-                    disabled={!currentPlayingStation() || currentPlayingStation().stationuuid !== selectedStation().stationuuid}
-                  >
-                    إيقاف
-                  </button>
+                  <Show when={!currentPlayingStation() || currentPlayingStation().stationuuid !== selectedStation().stationuuid}>
+                    <button
+                      class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                      onClick={() => playStation(selectedStation())}
+                    >
+                      تشغيل
+                    </button>
+                  </Show>
+                  <Show when={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}>
+                    <button
+                      class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                      onClick={() => stopStation(selectedStation())}
+                    >
+                      إيقاف
+                    </button>
+                  </Show>
                 </div>
                 <div class="flex space-x-reverse space-x-2">
                   <button
