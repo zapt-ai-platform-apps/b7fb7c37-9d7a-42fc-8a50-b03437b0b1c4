@@ -135,7 +135,7 @@ function App() {
 
   return (
     <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
-      <h1 class="text-4xl font-bold mb-4 text-center">راديو عربي احترافي</h1>
+      <h1 class="text-4xl font-bold mb-4 text-center">الراديو العربي</h1>
       <Show when={!currentCountry()}>
         <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
         <div class="flex justify-center">

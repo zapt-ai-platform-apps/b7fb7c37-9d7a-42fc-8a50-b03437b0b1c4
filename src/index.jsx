@@ -19,8 +19,8 @@ Sentry.init({
 window.progressierAppRuntimeSettings = {
   uid: import.meta.env.VITE_PUBLIC_APP_ID,
   icon512: "https://your-external-icon-url.com/icon512.png",
-  name: "راديو عربي احترافي",
-  shortName: "راديو عربي"
+  name: "الراديو العربي",
+  shortName: "الراديو العربي"
 };
 let script = document.createElement('script');
 script.setAttribute('src', 'https://progressier.app/z8yY3IKmfpDIw3mSncPh/script.js');
