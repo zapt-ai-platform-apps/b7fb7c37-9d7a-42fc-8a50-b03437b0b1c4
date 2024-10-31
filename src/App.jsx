@@ -1,8 +1,6 @@
-import { createSignal, onMount, For, Show } from 'solid-js';
-import { Routes, Route, A } from '@solidjs/router';
+import { createSignal, For, Show } from 'solid-js';
 
 function App() {
-  const [countries, setCountries] = createSignal([]);
   const [stations, setStations] = createSignal([]);
   const [searchQuery, setSearchQuery] = createSignal('');
   const [loading, setLoading] = createSignal(false);
@@ -70,17 +68,24 @@ function App() {
       <h1 class="text-4xl font-bold text-blue-800 mb-4 text-center">راديو عربي احترافي</h1>
       <Show when={!currentCountry()}>
         <h2 class="text-2xl font-bold text-blue-800 mb-4 text-center">اختر دولة</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <For each={arabCountries}>
-            {(country) => (
-              <div
-                class="p-4 bg-white rounded-lg shadow-md hover:bg-blue-100 cursor-pointer text-center"
-                onClick={() => selectCountry(country)}
-              >
-                <p class="text-blue-800 font-semibold">{country.name}</p>
-              </div>
-            )}
-          </For>
+        <div class="flex justify-center">
+          <select
+            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
+            onChange={(e) => {
+              const selectedCode = e.target.value;
+              const selectedCountry = arabCountries.find(country => country.code === selectedCode);
+              if (selectedCountry) {
+                selectCountry(selectedCountry);
+              }
+            }}
+          >
+            <option value="" selected disabled>اختر دولة</option>
+            <For each={arabCountries}>
+              {(country) => (
+                <option value={country.code}>{country.name}</option>
+              )}
+            </For>
+          </select>
         </div>
       </Show>
       <Show when={currentCountry()}>
