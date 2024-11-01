@@ -41,7 +41,10 @@ function App() {
       const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
       if (response.ok) {
         const data = await response.json();
-        const uniqueStations = data.filter((station, index, self) =>
+        // استبعاد المحطات غير الشغالة
+        const validStations = data.filter((station) => station.lastcheckok === 1);
+        // إزالة المحطات المكررة
+        const uniqueStations = validStations.filter((station, index, self) =>
           index === self.findIndex((s) => (
             s.name === station.name && s.url_resolved === station.url_resolved
           ))
@@ -171,26 +174,28 @@ function App() {
                 <p class="text-center">جاري التحميل...</p>
               }
             >
-              <select
-                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
-                size="10"
-                onChange={(e) => {
-                  const selectedStationuuid = e.target.value;
-                  const index = filteredStations().findIndex(s => s.stationuuid === selectedStationuuid);
-                  if (index !== -1) {
-                    setSelectedStation(filteredStations()[index]);
-                    setSelectedStationIndex(index);
-                  }
-                }}
-                disabled={loading()}
-              >
-                <option value="" selected disabled>اختر محطة</option>
-                <For each={filteredStations()}>
-                  {(station) => (
-                    <option value={station.stationuuid}>{station.name}</option>
-                  )}
-                </For>
-              </select>
+              <Show when={filteredStations().length > 0} fallback={<p class="text-center">لا توجد محطات متاحة في الوقت الحالي.</p>}>
+                <select
+                  class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
+                  size="10"
+                  onChange={(e) => {
+                    const selectedStationuuid = e.target.value;
+                    const index = filteredStations().findIndex(s => s.stationuuid === selectedStationuuid);
+                    if (index !== -1) {
+                      setSelectedStation(filteredStations()[index]);
+                      setSelectedStationIndex(index);
+                    }
+                  }}
+                  disabled={loading()}
+                >
+                  <option value="" selected disabled>اختر محطة</option>
+                  <For each={filteredStations()}>
+                    {(station) => (
+                      <option value={station.stationuuid}>{station.name}</option>
+                    )}
+                  </For>
+                </select>
+              </Show>
             </Show>
             <Show when={selectedStation()}>
               <div class="flex flex-col space-y-2">
