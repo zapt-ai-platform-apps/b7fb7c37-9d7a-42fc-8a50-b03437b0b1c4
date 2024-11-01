@@ -13,6 +13,8 @@ function StationList(props) {
     selectedStationIndex,
     previousStation,
     nextStation,
+    volume,
+    setVolume,
   } = props;
 
   return (
@@ -102,6 +104,21 @@ function StationList(props) {
             >
               المحطة التالية
             </button>
+          </div>
+          <div class="w-full mt-4">
+            <label for="volume" class="text-lg font-semibold mb-2 block">
+              مستوى الصوت
+            </label>
+            <input
+              id="volume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume()}
+              onInput={(e) => setVolume(e.target.value)}
+              class="w-full cursor-pointer"
+            />
           </div>
         </div>
       </Show>

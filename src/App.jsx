@@ -187,13 +187,13 @@ function App() {
               selectedStationIndex={selectedStationIndex}
               previousStation={previousStation}
               nextStation={nextStation}
+              volume={volume}
+              setVolume={setVolume}
             />
           </div>
           <StationDetails
             loading={loading}
             currentPlayingStation={currentPlayingStation}
-            volume={volume}
-            setVolume={setVolume}
           />
         </div>
       </Show>

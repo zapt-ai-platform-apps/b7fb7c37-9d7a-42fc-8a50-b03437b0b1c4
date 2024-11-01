@@ -1,7 +1,7 @@
 import { Show } from 'solid-js';
 
 function StationDetails(props) {
-  const { loading, currentPlayingStation, volume, setVolume } = props;
+  const { loading, currentPlayingStation } = props;
 
   return (
     <div class="md:w-2/3 mt-4 md:mt-0 flex flex-col items-center justify-center h-full">
@@ -34,21 +34,6 @@ function StationDetails(props) {
                 عدد مرات التشغيل: {currentPlayingStation().clickcount}
               </p>
             </Show>
-            <div class="w-full mt-4">
-              <label for="volume" class="text-lg font-semibold mb-2 block">
-                مستوى الصوت
-              </label>
-              <input
-                id="volume"
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume()}
-                onInput={(e) => setVolume(e.target.value)}
-                class="w-full"
-              />
-            </div>
           </div>
         </div>
       </Show>
