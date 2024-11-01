@@ -7,8 +7,7 @@ function App() {
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
   const [selectedStation, setSelectedStation] = createSignal(null);
   const [selectedStationIndex, setSelectedStationIndex] = createSignal(null);
-
-  const audioPlayers = new Map();
+  const [audio, setAudio] = createSignal(null);
 
   const arabCountries = [
     { name: 'مصر', code: 'Egypt' },
@@ -42,7 +41,6 @@ function App() {
       const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
       if (response.ok) {
         const data = await response.json();
-        // إزالة المحطات المكررة التي تحمل نفس الاسم أو الرابط
         const uniqueStations = data.filter((station, index, self) =>
           index === self.findIndex((s) => (
             s.name === station.name && s.url_resolved === station.url_resolved
@@ -73,27 +71,23 @@ function App() {
   function playStation(station) {
     if (loading()) return;
     // Stop any currently playing audio
-    if (currentPlayingStation() && currentPlayingStation().stationuuid !== station.stationuuid) {
-      stopStation(currentPlayingStation());
+    if (audio()) {
+      audio().pause();
+      audio().currentTime = 0;
     }
 
-    let audio = audioPlayers.get(station.stationuuid);
-    if (!audio) {
-      audio = new Audio(station.url_resolved);
-      audio.loop = true;
-      audioPlayers.set(station.stationuuid, audio);
-    }
-    audio.play();
+    const newAudio = new Audio(station.url_resolved);
+    newAudio.loop = true;
+    newAudio.play();
+    setAudio(newAudio);
     setCurrentPlayingStation(station);
   }
 
-  function stopStation(station) {
-    let audio = audioPlayers.get(station.stationuuid);
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-    if (currentPlayingStation() && currentPlayingStation().stationuuid === station.stationuuid) {
+  function stopStation() {
+    if (audio()) {
+      audio().pause();
+      audio().currentTime = 0;
+      setAudio(null);
       setCurrentPlayingStation(null);
     }
   }
@@ -118,16 +112,14 @@ function App() {
     }
   }
 
-  // تنظيف مشغلات الصوت عند تفريغ المكون
   onCleanup(() => {
-    audioPlayers.forEach((audio) => {
-      audio.pause();
-    });
-    audioPlayers.clear();
+    if (audio()) {
+      audio().pause();
+    }
   });
 
   return (
-    <div class="h-full bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
+    <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
       <h1 class="text-4xl font-bold mb-4 text-center">الراديو العربي</h1>
       <Show when={!currentCountry()}>
         <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
@@ -161,6 +153,11 @@ function App() {
             setCurrentPlayingStation(null);
             setSelectedStation(null);
             setSelectedStationIndex(null);
+            if (audio()) {
+              audio().pause();
+              audio().currentTime = 0;
+              setAudio(null);
+            }
           }}
         >
           العودة إلى قائمة الدول
@@ -209,7 +206,7 @@ function App() {
                   <Show when={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}>
                     <button
                       class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                      onClick={() => stopStation(selectedStation())}
+                      onClick={() => stopStation()}
                     >
                       إيقاف
                     </button>
