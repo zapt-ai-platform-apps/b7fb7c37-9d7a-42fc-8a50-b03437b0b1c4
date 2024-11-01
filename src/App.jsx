@@ -1,4 +1,7 @@
-import { createSignal, For, Show, onCleanup } from 'solid-js';
+import { createSignal, Show, onCleanup } from 'solid-js';
+import CountrySelector from './components/CountrySelector';
+import StationList from './components/StationList';
+import StationDetails from './components/StationDetails';
 
 function App() {
   const [stations, setStations] = createSignal([]);
@@ -10,27 +13,51 @@ function App() {
   const [audio, setAudio] = createSignal(null);
 
   const arabCountries = [
-    // قائمة الدول العربية
     { name: 'مصر', code: 'Egypt' },
     { name: 'السعودية', code: 'Saudi Arabia' },
-    // باقي الدول...
-    // (للحفاظ على الاختصار، تم حذف بعض الدول من هذه القائمة)
+    { name: 'الإمارات', code: 'United Arab Emirates' },
+    { name: 'الكويت', code: 'Kuwait' },
+    { name: 'قطر', code: 'Qatar' },
+    { name: 'البحرين', code: 'Bahrain' },
+    { name: 'عمان', code: 'Oman' },
+    { name: 'اليمن', code: 'Yemen' },
+    { name: 'العراق', code: 'Iraq' },
+    { name: 'سوريا', code: 'Syria' },
+    { name: 'لبنان', code: 'Lebanon' },
+    { name: 'الأردن', code: 'Jordan' },
+    { name: 'فلسطين', code: 'Palestine' },
+    { name: 'ليبيا', code: 'Libya' },
+    { name: 'السودان', code: 'Sudan' },
+    { name: 'المغرب', code: 'Morocco' },
+    { name: 'الجزائر', code: 'Algeria' },
+    { name: 'تونس', code: 'Tunisia' },
+    { name: 'موريتانيا', code: 'Mauritania' },
+    { name: 'جيبوتي', code: 'Djibouti' },
+    { name: 'الصومال', code: 'Somalia' },
+    { name: 'جزر القمر', code: 'Comoros' },
   ];
 
   const fetchStations = async (countryCode) => {
     if (loading()) return;
     setLoading(true);
     try {
-      const response = await fetch(`https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(countryCode)}`);
+      const response = await fetch(
+        `https://de1.api.radio-browser.info/json/stations/bycountry/${encodeURIComponent(
+          countryCode
+        )}`
+      );
       if (response.ok) {
         const data = await response.json();
         // استبعاد المحطات غير الشغالة
-        const validStations = data.filter((station) => station.lastcheckok === 1 && station.url_resolved);
+        const validStations = data.filter((station) => station.lastcheckok === 1);
         // إزالة المحطات المكررة
-        const uniqueStations = validStations.filter((station, index, self) =>
-          index === self.findIndex((s) => (
-            s.name === station.name && s.url_resolved === station.url_resolved
-          ))
+        const uniqueStations = validStations.filter(
+          (station, index, self) =>
+            index ===
+            self.findIndex(
+              (s) =>
+                s.name === station.name && s.url_resolved === station.url_resolved
+            )
         );
         setStations(uniqueStations);
       } else {
@@ -43,6 +70,8 @@ function App() {
     }
   };
 
+  const filteredStations = () => stations();
+
   const selectCountry = (country) => {
     setCurrentCountry(country);
     setCurrentPlayingStation(null);
@@ -52,9 +81,9 @@ function App() {
     fetchStations(country.code);
   };
 
-  const playStation = (station) => {
+  function playStation(station) {
     if (loading()) return;
-    // إيقاف أي صوت تم تشغيله مسبقًا
+    // Stop any currently playing audio
     if (audio()) {
       audio().pause();
       audio().currentTime = 0;
@@ -65,36 +94,36 @@ function App() {
     newAudio.play();
     setAudio(newAudio);
     setCurrentPlayingStation(station);
-  };
+  }
 
-  const stopStation = () => {
+  function stopStation() {
     if (audio()) {
       audio().pause();
       audio().currentTime = 0;
       setAudio(null);
       setCurrentPlayingStation(null);
     }
-  };
+  }
 
-  const previousStation = () => {
+  function previousStation() {
     if (selectedStationIndex() > 0) {
       const index = selectedStationIndex() - 1;
-      const station = stations()[index];
+      const station = filteredStations()[index];
       setSelectedStation(station);
       setSelectedStationIndex(index);
       playStation(station);
     }
-  };
+  }
 
-  const nextStation = () => {
-    if (selectedStationIndex() < stations().length - 1) {
+  function nextStation() {
+    if (selectedStationIndex() < filteredStations().length - 1) {
       const index = selectedStationIndex() + 1;
-      const station = stations()[index];
+      const station = filteredStations()[index];
       setSelectedStation(station);
       setSelectedStationIndex(index);
       playStation(station);
     }
-  };
+  }
 
   onCleanup(() => {
     if (audio()) {
@@ -103,30 +132,14 @@ function App() {
   });
 
   return (
-    <div class="h-full bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
+    <div class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-4 flex flex-col text-blue-800">
       <h1 class="text-4xl font-bold mb-4 text-center">الراديو العربي</h1>
       <Show when={!currentCountry()}>
-        <h2 class="text-2xl font-bold mb-4 text-center">اختر دولة</h2>
-        <div class="flex justify-center">
-          <select
-            class="w-full max-w-md p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
-            onChange={(e) => {
-              const selectedCode = e.target.value;
-              const selectedCountry = arabCountries.find(country => country.code === selectedCode);
-              if (selectedCountry) {
-                selectCountry(selectedCountry);
-              }
-            }}
-            disabled={loading()}
-          >
-            <option value="" selected disabled>اختر دولة</option>
-            <For each={arabCountries}>
-              {(country) => (
-                <option value={country.code}>{country.name}</option>
-              )}
-            </For>
-          </select>
-        </div>
+        <CountrySelector
+          arabCountries={arabCountries}
+          selectCountry={selectCountry}
+          loading={loading}
+        />
       </Show>
       <Show when={currentCountry()}>
         <button
@@ -146,106 +159,29 @@ function App() {
         >
           العودة إلى قائمة الدول
         </button>
-        <h2 class="text-2xl font-bold mb-4 text-center">محطات الراديو في {currentCountry().name}</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center">
+          محطات الراديو في {currentCountry().name}
+        </h2>
         <div class="flex flex-col md:flex-row md:space-x-reverse md:space-x-4 h-full">
           <div class="md:w-1/3">
-            <Show
-              when={!loading()}
-              fallback={
-                <p class="text-center animate-pulse">جاري التحميل...</p>
-              }
-            >
-              <Show when={stations().length > 0} fallback={<p class="text-center">لا توجد محطات متاحة في الوقت الحالي.</p>}>
-                <select
-                  class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border cursor-pointer"
-                  size="10"
-                  onChange={(e) => {
-                    const selectedStationuuid = e.target.value;
-                    const index = stations().findIndex(s => s.stationuuid === selectedStationuuid);
-                    if (index !== -1) {
-                      setSelectedStation(stations()[index]);
-                      setSelectedStationIndex(index);
-                    }
-                  }}
-                  disabled={loading()}
-                >
-                  <option value="" selected disabled>اختر محطة</option>
-                  <For each={stations()}>
-                    {(station) => (
-                      <option value={station.stationuuid}>{station.name}</option>
-                    )}
-                  </For>
-                </select>
-              </Show>
-            </Show>
-            <Show when={selectedStation()}>
-              <div class="flex flex-col space-y-2">
-                <div class="flex space-x-reverse space-x-2">
-                  <Show when={!currentPlayingStation() || currentPlayingStation().stationuuid !== selectedStation().stationuuid}>
-                    <button
-                      class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                      onClick={() => playStation(selectedStation())}
-                    >
-                      تشغيل
-                    </button>
-                  </Show>
-                  <Show when={currentPlayingStation() && currentPlayingStation().stationuuid === selectedStation().stationuuid}>
-                    <button
-                      class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                      onClick={() => stopStation()}
-                    >
-                      إيقاف
-                    </button>
-                  </Show>
-                </div>
-                <div class="flex space-x-reverse space-x-2">
-                  <button
-                    class={`flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 ${selectedStationIndex() === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    onClick={previousStation}
-                    disabled={selectedStationIndex() === 0}
-                  >
-                    المحطة السابقة
-                  </button>
-                  <button
-                    class={`flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 ${selectedStationIndex() === stations().length -1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    onClick={nextStation}
-                    disabled={selectedStationIndex() === stations().length -1}
-                  >
-                    المحطة التالية
-                  </button>
-                </div>
-              </div>
-            </Show>
+            <StationList
+              filteredStations={filteredStations}
+              loading={loading}
+              selectedStation={selectedStation}
+              setSelectedStation={setSelectedStation}
+              setSelectedStationIndex={setSelectedStationIndex}
+              playStation={playStation}
+              stopStation={stopStation}
+              currentPlayingStation={currentPlayingStation}
+              selectedStationIndex={selectedStationIndex}
+              previousStation={previousStation}
+              nextStation={nextStation}
+            />
           </div>
-          <div class="md:w-2/3 mt-4 md:mt-0 flex flex-col items-center justify-center h-full">
-            <Show when={loading()}>
-              <p class="text-center animate-pulse">جاري التحميل...</p>
-            </Show>
-            <Show when={!loading() && currentPlayingStation()}>
-              <div class="w-full text-center">
-                <h2 class="text-2xl font-bold mb-4">{currentPlayingStation().name}</h2>
-                <div class="flex flex-col items-center space-y-4">
-                  <Show when={currentPlayingStation().favicon}>
-                    <img src={currentPlayingStation().favicon} alt="شعار المحطة" class="w-32 h-32 object-contain rounded-full border-2 border-white shadow-lg" />
-                  </Show>
-                  <p class="text-lg">الدولة: {currentPlayingStation().country}</p>
-                  <p class="text-lg">اللغة: {currentPlayingStation().language}</p>
-                  <Show when={currentPlayingStation().bitrate}>
-                    <p class="text-lg">معدل البت: {currentPlayingStation().bitrate} kbps</p>
-                  </Show>
-                  <Show when={currentPlayingStation().tags}>
-                    <p class="text-lg">التصنيفات: {currentPlayingStation().tags}</p>
-                  </Show>
-                  <Show when={currentPlayingStation().clickcount}>
-                    <p class="text-lg">عدد مرات التشغيل: {currentPlayingStation().clickcount}</p>
-                  </Show>
-                </div>
-              </div>
-            </Show>
-            <Show when={!loading() && !currentPlayingStation()}>
-              <p class="text-center">اختر محطة من القائمة لتشغيلها</p>
-            </Show>
-          </div>
+          <StationDetails
+            loading={loading}
+            currentPlayingStation={currentPlayingStation}
+          />
         </div>
       </Show>
     </div>
