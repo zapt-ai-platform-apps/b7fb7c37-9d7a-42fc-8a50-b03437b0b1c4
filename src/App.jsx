@@ -2,6 +2,7 @@ import { createSignal, Show, onCleanup } from 'solid-js';
 import CountrySelector from './components/CountrySelector';
 import StationList from './components/StationList';
 import StationDetails from './components/StationDetails';
+import stringSimilarity from 'string-similarity';
 
 function App() {
   const [stations, setStations] = createSignal([]);
@@ -50,15 +51,17 @@ function App() {
         const data = await response.json();
         // استبعاد المحطات غير الشغالة
         const validStations = data.filter((station) => station.lastcheckok === 1);
-        // إزالة المحطات المكررة
-        const uniqueStations = validStations.filter(
-          (station, index, self) =>
-            index ===
-            self.findIndex(
-              (s) =>
-                s.name === station.name && s.url_resolved === station.url_resolved
-            )
-        );
+        // إزالة المحطات المتشابهة
+        const uniqueStations = [];
+        validStations.forEach((station) => {
+          const isSimilar = uniqueStations.some(
+            (uniqueStation) =>
+              stringSimilarity.compareTwoStrings(uniqueStation.name, station.name) > 0.8
+          );
+          if (!isSimilar) {
+            uniqueStations.push(station);
+          }
+        });
         setStations(uniqueStations);
       } else {
         console.error('Error fetching stations:', response.statusText);
