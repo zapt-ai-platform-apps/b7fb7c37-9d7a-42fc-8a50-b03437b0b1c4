@@ -1,4 +1,4 @@
-import { createSignal, Show, onCleanup } from 'solid-js';
+import { createSignal, createEffect, onCleanup, Show } from 'solid-js';
 import CountrySelector from './components/CountrySelector';
 import StationList from './components/StationList';
 import StationDetails from './components/StationDetails';
@@ -12,6 +12,7 @@ function App() {
   const [selectedStation, setSelectedStation] = createSignal(null);
   const [selectedStationIndex, setSelectedStationIndex] = createSignal(null);
   const [audio, setAudio] = createSignal(null);
+  const [volume, setVolume] = createSignal(1);
 
   const arabCountries = [
     { name: 'مصر', code: 'Egypt' },
@@ -94,6 +95,7 @@ function App() {
 
     const newAudio = new Audio(station.url_resolved);
     newAudio.loop = true;
+    newAudio.volume = volume();
     newAudio.play();
     setAudio(newAudio);
     setCurrentPlayingStation(station);
@@ -127,6 +129,12 @@ function App() {
       playStation(station);
     }
   }
+
+  createEffect(() => {
+    if (audio()) {
+      audio().volume = volume();
+    }
+  });
 
   onCleanup(() => {
     if (audio()) {
@@ -184,6 +192,8 @@ function App() {
           <StationDetails
             loading={loading}
             currentPlayingStation={currentPlayingStation}
+            volume={volume}
+            setVolume={setVolume}
           />
         </div>
       </Show>
