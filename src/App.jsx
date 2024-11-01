@@ -2,7 +2,6 @@ import { createSignal, For, Show, onCleanup } from 'solid-js';
 
 function App() {
   const [stations, setStations] = createSignal([]);
-  const [searchQuery, setSearchQuery] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [currentCountry, setCurrentCountry] = createSignal(null);
   const [currentPlayingStation, setCurrentPlayingStation] = createSignal(null);
@@ -60,19 +59,13 @@ function App() {
     }
   };
 
-  const filteredStations = () => {
-    const query = searchQuery().toLowerCase();
-    return stations().filter((station) =>
-      station.name.toLowerCase().includes(query)
-    );
-  };
+  const filteredStations = () => stations();
 
   const selectCountry = (country) => {
     setCurrentCountry(country);
     setCurrentPlayingStation(null);
     setSelectedStation(null);
     setSelectedStationIndex(null);
-    setSearchQuery('');
     setStations([]);
     fetchStations(country.code);
   };
@@ -175,13 +168,6 @@ function App() {
         <h2 class="text-2xl font-bold mb-4 text-center">محطات الراديو في {currentCountry().name}</h2>
         <div class="flex flex-col md:flex-row md:space-x-reverse md:space-x-4 h-full">
           <div class="md:w-1/3">
-            <input
-              type="text"
-              placeholder="بحث"
-              value={searchQuery()}
-              onInput={(e) => setSearchQuery(e.target.value)}
-              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent box-border"
-            />
             <Show
               when={!loading()}
               fallback={
